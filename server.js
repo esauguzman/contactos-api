@@ -3,15 +3,20 @@ const multer  = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const cors    = require('cors');
 const path    = require('path');
+const fs      = require('fs');
 
 const app    = express();
 const PUERTO = process.env.PORT || 3000;
+
+// Crear carpeta uploads si no existe
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
 
 app.use(cors());
 app.use(express.json());
 app.use('/fotos', express.static(path.join(__dirname, 'uploads')));
 
-// ── Guardar fotos ────────────────────────────────────────────
 const guardado = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename:    (req, file, cb) => {
@@ -29,7 +34,6 @@ const subir = multer({
   }
 });
 
-// ── Clase Contacto ───────────────────────────────────────────
 class Contacto {
   constructor(datos) {
     this.id        = uuidv4();
@@ -44,10 +48,8 @@ class Contacto {
   }
 }
 
-// ── Base de datos en memoria ─────────────────────────────────
 let lista = [];
 
-// ── Validaciones ─────────────────────────────────────────────
 function validar(datos, esEdicion = false) {
   const errores = [];
   if (!esEdicion) {
@@ -63,11 +65,6 @@ function validar(datos, esEdicion = false) {
   return errores;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ENDPOINTS
-// ═══════════════════════════════════════════════════════════════
-
-// GET /contactos?buscar=texto
 app.get('/contactos', (req, res) => {
   const { buscar } = req.query;
   let resultado = lista;
@@ -83,14 +80,12 @@ app.get('/contactos', (req, res) => {
   res.json({ total: resultado.length, contactos: resultado });
 });
 
-// GET /contactos/:id
 app.get('/contactos/:id', (req, res) => {
   const contacto = lista.find(c => c.id === req.params.id);
   if (!contacto) return res.status(404).json({ error: 'Contacto no encontrado' });
   res.json(contacto);
 });
 
-// POST /contactos  (multipart/form-data)
 app.post('/contactos', subir.single('foto'), (req, res) => {
   const errores = validar(req.body);
   if (errores.length > 0) return res.status(400).json({ errores });
@@ -99,7 +94,6 @@ app.post('/contactos', subir.single('foto'), (req, res) => {
   res.status(201).json({ mensaje: 'Contacto creado', contacto: nuevo });
 });
 
-// PUT /contactos/:id  (multipart/form-data)
 app.put('/contactos/:id', subir.single('foto'), (req, res) => {
   const indice = lista.findIndex(c => c.id === req.params.id);
   if (indice === -1) return res.status(404).json({ error: 'Contacto no encontrado' });
@@ -119,7 +113,6 @@ app.put('/contactos/:id', subir.single('foto'), (req, res) => {
   res.json({ mensaje: 'Contacto actualizado', contacto: lista[indice] });
 });
 
-// DELETE /contactos/:id
 app.delete('/contactos/:id', (req, res) => {
   const indice = lista.findIndex(c => c.id === req.params.id);
   if (indice === -1) return res.status(404).json({ error: 'Contacto no encontrado' });
@@ -127,7 +120,6 @@ app.delete('/contactos/:id', (req, res) => {
   res.json({ mensaje: 'Contacto eliminado' });
 });
 
-// GET /mapa/:id  → lat/lng + link Google Maps driving
 app.get('/mapa/:id', (req, res) => {
   const contacto = lista.find(c => c.id === req.params.id);
   if (!contacto) return res.status(404).json({ error: 'Contacto no encontrado' });
@@ -140,3 +132,4 @@ app.get('/mapa/:id', (req, res) => {
 app.listen(PUERTO, '0.0.0.0', () => {
   console.log(`✅ API corriendo en puerto ${PUERTO}`);
 });
+
