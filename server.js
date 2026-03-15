@@ -8,7 +8,6 @@ const fs      = require('fs');
 const app    = express();
 const PUERTO = process.env.PORT || 3000;
 
-// Crear carpeta uploads si no existe
 if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
@@ -20,7 +19,7 @@ app.use('/fotos', express.static(path.join(__dirname, 'uploads')));
 const guardado = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename:    (req, file, cb) => {
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname) || '.jpg';
     cb(null, `${uuidv4()}${ext}`);
   }
 });
@@ -29,8 +28,7 @@ const subir = multer({
   storage: guardado,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const ok = /jpeg|jpg|png|gif|webp/.test(file.mimetype);
-    ok ? cb(null, true) : cb(new Error('Solo imágenes'));
+    cb(null, true);
   }
 });
 
@@ -54,14 +52,10 @@ function validar(datos, esEdicion = false) {
   const errores = [];
   if (!esEdicion) {
     if (!datos.nombre   || datos.nombre.trim()   === '') errores.push('El nombre es requerido');
-    if (!datos.telefono || datos.telefono.trim() === '') errores.push('El teléfono es requerido');
+    if (!datos.telefono || datos.telefono.trim() === '') errores.push('El telefono es requerido');
   }
-  if (datos.nombre    && datos.nombre.trim().length < 2)
+  if (datos.nombre   && datos.nombre.trim().length < 2)
     errores.push('El nombre debe tener al menos 2 caracteres');
-  if (datos.telefono  && !/^\+?[\d\s\-()]{7,20}$/.test(datos.telefono))
-    errores.push('El teléfono no es válido');
-  if (datos.email     && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email))
-    errores.push('El email no es válido');
   return errores;
 }
 
@@ -124,12 +118,11 @@ app.get('/mapa/:id', (req, res) => {
   const contacto = lista.find(c => c.id === req.params.id);
   if (!contacto) return res.status(404).json({ error: 'Contacto no encontrado' });
   if (!contacto.lat || !contacto.lng)
-    return res.status(400).json({ error: 'Este contacto no tiene ubicación' });
+    return res.status(400).json({ error: 'Este contacto no tiene ubicacion' });
   const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${contacto.lat},${contacto.lng}&travelmode=driving`;
   res.json({ nombre: contacto.nombre, lat: contacto.lat, lng: contacto.lng, gmaps });
 });
 
 app.listen(PUERTO, '0.0.0.0', () => {
-  console.log(`✅ API corriendo en puerto ${PUERTO}`);
+  console.log(`API corriendo en puerto ${PUERTO}`);
 });
-
