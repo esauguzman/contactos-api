@@ -59,6 +59,10 @@ function validar(datos, esEdicion = false) {
   return errores;
 }
 
+app.get('/', (req, res) => {
+  res.json({ mensaje: 'API de Contactos funcionando ✅', version: '1.0' });
+});
+
 app.get('/contactos', (req, res) => {
   const { buscar } = req.query;
   let resultado = lista;
@@ -123,6 +127,41 @@ app.get('/mapa/:id', (req, res) => {
   res.json({ nombre: contacto.nombre, lat: contacto.lat, lng: contacto.lng, gmaps });
 });
 
+app.get('/galeria', (req, res) => {
+  const contactosConFoto = lista.filter(c => c.foto);
+
+  const tarjetas = contactosConFoto.map(c => `
+    <div style="background:#1e1e2e;border-radius:12px;padding:16px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.3)">
+      <img src="/fotos/${c.foto}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #7c3aed"/>
+      <h3 style="color:#fff;margin:10px 0 4px">${c.nombre}</h3>
+      <p style="color:#a0a0b0;margin:2px 0">📞 ${c.telefono}</p>
+      <p style="color:#a0a0b0;margin:2px 0">📍 ${c.direccion}</p>
+    </div>
+  `).join('');
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8"/>
+      <title>Galería de Contactos</title>
+    </head>
+    <body style="margin:0;padding:24px;background:#0f0f1a;font-family:sans-serif">
+      <h1 style="color:#7c3aed;text-align:center">📸 Galería de Contactos</h1>
+      <p style="color:#a0a0b0;text-align:center">${contactosConFoto.length} contactos con foto</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;max-width:900px;margin:0 auto">
+        ${tarjetas}
+      </div>
+    </body>
+    </html>
+  `);
+});
+
 app.listen(PUERTO, '0.0.0.0', () => {
   console.log(`API corriendo en puerto ${PUERTO}`);
 });
+```
+
+Copia todo, pégalo en tu archivo `index.js`, guarda y sube a GitHub. Railway lo desplegará automáticamente. Luego entra a:
+```
+https://contactos-api-production-01af.up.railway.app/galeria
