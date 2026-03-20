@@ -129,7 +129,6 @@ app.get('/mapa/:id', (req, res) => {
 
 app.get('/galeria', (req, res) => {
   const contactosConFoto = lista.filter(c => c.foto);
-
   const tarjetas = contactosConFoto.map(c => `
     <div style="background:#1e1e2e;border-radius:12px;padding:16px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.3)">
       <img src="/fotos/${c.foto}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #7c3aed"/>
@@ -138,7 +137,6 @@ app.get('/galeria', (req, res) => {
       <p style="color:#a0a0b0;margin:2px 0">📍 ${c.direccion}</p>
     </div>
   `).join('');
-
   res.send(`
     <!DOCTYPE html>
     <html>
@@ -160,8 +158,3 @@ app.get('/galeria', (req, res) => {
 app.listen(PUERTO, '0.0.0.0', () => {
   console.log(`API corriendo en puerto ${PUERTO}`);
 });
-```
-
-Copia todo, pégalo en tu archivo `index.js`, guarda y sube a GitHub. Railway lo desplegará automáticamente. Luego entra a:
-```
-https://contactos-api-production-01af.up.railway.app/galeria
